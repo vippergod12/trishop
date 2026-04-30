@@ -7,15 +7,40 @@
  * Khi deploy lên Vercel, fallback dùng VERCEL_URL được set tự động.
  */
 
+/** Kiểm tra một chuỗi có phải URL tuyệt đối hợp lệ không. */
+function isValidUrl(value: string): boolean {
+  try {
+    const u = new URL(value);
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Quyết định domain của site.
+ *
+ * Defensive: nếu env vars bị set sai (ví dụ trên Vercel ai đó dán nhầm tên
+ * biến vào ô Value), KHÔNG để build crash — bỏ qua giá trị invalid và
+ * fallback về VERCEL_URL hoặc localhost.
+ */
 function resolveSiteUrl(): string {
-  const explicit =
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-    process.env.SITE_URL?.trim() ||
-    process.env.VITE_SITE_URL?.trim();
-  if (explicit) return explicit.replace(/\/$/, '');
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.SITE_URL,
+    process.env.VITE_SITE_URL,
+  ];
+
+  for (const raw of candidates) {
+    const v = raw?.trim();
+    if (v && isValidUrl(v)) return v.replace(/\/$/, '');
+  }
 
   const vercelUrl = process.env.NEXT_PUBLIC_VERCEL_URL?.trim() || process.env.VERCEL_URL?.trim();
-  if (vercelUrl) return `https://${vercelUrl.replace(/\/$/, '')}`;
+  if (vercelUrl) {
+    const withScheme = `https://${vercelUrl.replace(/\/$/, '')}`;
+    if (isValidUrl(withScheme)) return withScheme;
+  }
 
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;
