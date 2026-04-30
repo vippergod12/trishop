@@ -15,6 +15,34 @@ export function handlePreflight(req: VercelRequest, res: VercelResponse): boolea
   return false;
 }
 
+/**
+ * Bật CDN cache cho response GET công khai.
+ *
+ * Trên Vercel Edge:
+ *   - `s-maxage`: thời gian cache "tươi" (giây)
+ *   - `stale-while-revalidate`: trong khoảng này phục vụ phiên bản cũ ngay,
+ *     đồng thời revalidate trong nền → user không bao giờ phải chờ DB
+ *
+ * Admin có thể bypass cache bằng cách thêm query param ngẫu nhiên (`?_=<ts>`),
+ * vì Vercel CDN dùng full URL làm key.
+ */
+export function setPublicCache(
+  res: VercelResponse,
+  options: { sMaxAge?: number; staleWhileRevalidate?: number } = {},
+) {
+  const sMaxAge = options.sMaxAge ?? 60;
+  const swr = options.staleWhileRevalidate ?? 300;
+  res.setHeader(
+    'Cache-Control',
+    `public, max-age=0, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`,
+  );
+}
+
+/** Đảm bảo browser/CDN không cache response (dùng cho admin / mutation). */
+export function setNoStore(res: VercelResponse) {
+  res.setHeader('Cache-Control', 'private, no-store, max-age=0');
+}
+
 export function badRequest(res: VercelResponse, message: string) {
   res.status(400).json({ message });
 }

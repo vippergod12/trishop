@@ -1,7 +1,15 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '../_lib/db.js';
 import { requireAdmin } from '../_lib/auth.js';
-import { badRequest, handlePreflight, methodNotAllowed, notFound, slugify } from '../_lib/http.js';
+import {
+  badRequest,
+  handlePreflight,
+  methodNotAllowed,
+  notFound,
+  setNoStore,
+  setPublicCache,
+  slugify,
+} from '../_lib/http.js';
 
 function getIdentifier(req: VercelRequest): { id?: number; slug?: string } {
   const raw = req.query.id;
@@ -25,11 +33,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       LIMIT 1
     `) as Record<string, unknown>[];
     if (!rows[0]) return notFound(res, 'Không tìm thấy danh mục');
+    setPublicCache(res, { sMaxAge: 300, staleWhileRevalidate: 1800 });
     return res.status(200).json(rows[0]);
   }
 
   if (req.method === 'PUT') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const body = (req.body ?? {}) as {
       name?: string;
       slug?: string;
@@ -57,6 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'DELETE') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const rows = (await sql`
       DELETE FROM categories
       WHERE (${ident.id ?? null}::int IS NOT NULL AND id = ${ident.id ?? null}::int)

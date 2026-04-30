@@ -1,7 +1,13 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '../_lib/db.js';
 import { requireAdmin } from '../_lib/auth.js';
-import { badRequest, handlePreflight, methodNotAllowed } from '../_lib/http.js';
+import {
+  badRequest,
+  handlePreflight,
+  methodNotAllowed,
+  setNoStore,
+  setPublicCache,
+} from '../_lib/http.js';
 
 const MAX_FEATURED = 12;
 
@@ -10,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'GET') {
     const rows = await sql`
-      SELECT p.id, p.category_id, p.name, p.slug, p.description, p.price,
+      SELECT p.id, p.category_id, p.name, p.slug, p.price,
              p.sale_price, p.sale_end_at,
              p.image_url, p.colors,
              p.is_active, p.featured_rank,
@@ -22,11 +28,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       ORDER BY p.featured_rank ASC
       LIMIT ${MAX_FEATURED}
     `;
+    setPublicCache(res, { sMaxAge: 120, staleWhileRevalidate: 600 });
     return res.status(200).json(rows);
   }
 
   if (req.method === 'PUT') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const body = (req.body ?? {}) as { ids?: unknown };
     const rawIds = Array.isArray(body.ids) ? body.ids : [];
 
@@ -42,7 +50,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (ids.length === 0) {
-      // Reset all featured ranks
       await sql`UPDATE products SET featured_rank = NULL WHERE featured_rank IS NOT NULL`;
       return res.status(200).json({ count: 0, ids: [] });
     }
@@ -57,14 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return badRequest(res, 'Không có sản phẩm hợp lệ nào trong danh sách');
     }
 
-    // Reset rank for products NOT in the new list
     await sql`
       UPDATE products SET featured_rank = NULL
       WHERE featured_rank IS NOT NULL
         AND id <> ALL(${finalIds}::int[])
     `;
 
-    // Apply new ranks (1-based)
     for (let i = 0; i < finalIds.length; i++) {
       const id = finalIds[i];
       const rank = i + 1;

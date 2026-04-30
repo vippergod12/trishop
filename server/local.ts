@@ -11,6 +11,7 @@ import productsIndex from '../api/products/index.js';
 import productsFeatured from '../api/products/featured.js';
 import productsHero from '../api/products/hero.js';
 import productById from '../api/products/[id].js';
+import homeHandler from '../api/home.js';
 
 type VercelLikeHandler = (req: VercelRequest, res: VercelResponse) => unknown | Promise<unknown>;
 
@@ -36,6 +37,8 @@ app.use(express.json({ limit: '8mb' }));
 
 app.post('/api/auth/login', adapt(loginHandler));
 app.get('/api/auth/me', adapt(meHandler));
+
+app.get('/api/home', adapt(homeHandler));
 
 app.get('/api/categories', adapt(categoriesIndex));
 app.post('/api/categories', adapt(categoriesIndex));

@@ -62,7 +62,13 @@ export default function HotBento({ products, loading }: Props) {
                   >
                     <div className="bento-image">
                       {p.image_url ? (
-                        <img src={p.image_url} alt={p.name} loading="lazy" />
+                        <img
+                          src={p.image_url}
+                          alt={p.name}
+                          loading={i < 2 ? 'eager' : 'lazy'}
+                          decoding="async"
+                          fetchPriority={i === 0 ? 'high' : undefined}
+                        />
                       ) : (
                         <Fallback name={p.name} />
                       )}

@@ -12,7 +12,13 @@ export default function ProductCard({ product }: { product: Product }) {
     >
       <div className="product-card-thumb">
         {product.image_url ? (
-          <img src={product.image_url} alt={product.name} loading="lazy" draggable={false} />
+          <img
+            src={product.image_url}
+            alt={product.name}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+          />
         ) : (
           <div className="product-card-placeholder">No image</div>
         )}

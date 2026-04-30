@@ -1,5 +1,18 @@
 import type { Category, LoginResponse, Product } from '../types';
 
+export type HomeBundle = {
+  categories: Category[];
+  products: Product[];
+  featured: Product[];
+  hero: Product | null;
+};
+
+export type ProductDetailBundle = {
+  product: Product;
+  related?: Product[];
+  featured?: Product[];
+};
+
 const TOKEN_KEY = 'shop_admin_token';
 
 export function getToken(): string | null {
@@ -19,7 +32,16 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const res = await fetch(path, { ...options, headers });
+  // Admin cần data tươi → bypass CDN cache cho GET bằng cách thêm timestamp.
+  // (Vercel Edge dùng full URL làm cache key, query param khác = cache MISS.)
+  let finalPath = path;
+  const method = (options.method ?? 'GET').toUpperCase();
+  if (token && method === 'GET') {
+    const sep = finalPath.includes('?') ? '&' : '?';
+    finalPath = `${finalPath}${sep}_t=${Date.now()}`;
+  }
+
+  const res = await fetch(finalPath, { ...options, headers });
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   const data = text ? JSON.parse(text) : null;
@@ -109,5 +131,21 @@ export const api = {
       method: 'PUT',
       body: JSON.stringify({ id }),
     });
+  },
+  /**
+   * Lấy toàn bộ data trang chủ trong 1 request (categories + products +
+   * featured + hero). Dùng thay cho 4 lần gọi riêng để giảm cold start.
+   */
+  getHome() {
+    return request<HomeBundle>('/api/home');
+  },
+  /**
+   * Lấy chi tiết sản phẩm + related + featured trong 1 request.
+   * Tận dụng `?include=related,featured` của `/api/products/[id]`.
+   */
+  getProductDetail(idOrSlug: string | number) {
+    return request<ProductDetailBundle>(
+      `/api/products/${idOrSlug}?include=related,featured`,
+    );
   },
 };

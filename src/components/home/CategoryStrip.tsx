@@ -61,7 +61,13 @@ export default function CategoryStrip({ categories, loading }: Props) {
                 <Link to={`/danh-muc/${c.slug}`} className="strip-card" draggable={false}>
                   <div className="strip-image">
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.name} draggable={false} />
+                      <img
+                        src={c.image_url}
+                        alt={c.name}
+                        loading="lazy"
+                        decoding="async"
+                        draggable={false}
+                      />
                     ) : (
                       <div className="strip-fallback">
                         <span>{c.name.charAt(0).toUpperCase()}</span>

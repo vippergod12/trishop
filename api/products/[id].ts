@@ -1,7 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '../_lib/db.js';
 import { requireAdmin } from '../_lib/auth.js';
-import { badRequest, handlePreflight, methodNotAllowed, notFound, slugify } from '../_lib/http.js';
+import {
+  badRequest,
+  handlePreflight,
+  methodNotAllowed,
+  notFound,
+  setNoStore,
+  setPublicCache,
+  slugify,
+} from '../_lib/http.js';
+
+const RELATED_LIMIT = 12;
+const FEATURED_LIMIT = 12;
 
 function getIdentifier(req: VercelRequest): { id?: number; slug?: string } {
   const raw = req.query.id;
@@ -9,6 +20,17 @@ function getIdentifier(req: VercelRequest): { id?: number; slug?: string } {
   if (!value) return {};
   if (/^\d+$/.test(value)) return { id: Number(value) };
   return { slug: value };
+}
+
+function parseIncludes(req: VercelRequest): { related: boolean; featured: boolean } {
+  const raw = req.query.include;
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  if (!value) return { related: false, featured: false };
+  const parts = String(value).split(',').map((s) => s.trim().toLowerCase());
+  return {
+    related: parts.includes('related'),
+    featured: parts.includes('featured'),
+  };
 }
 
 function parseStringArray(input: unknown): string[] {
@@ -50,6 +72,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!ident.id && !ident.slug) return badRequest(res, 'Thiếu id hoặc slug');
 
   if (req.method === 'GET') {
+    const includes = parseIncludes(req);
+
     const rows = (await sql`
       SELECT p.id, p.category_id, p.name, p.slug, p.description, p.price,
              p.sale_price, p.sale_end_at,
@@ -63,12 +87,66 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
          OR (${ident.slug ?? null}::text IS NOT NULL AND p.slug = ${ident.slug ?? null}::text)
       LIMIT 1
     `) as Record<string, unknown>[];
-    if (!rows[0]) return notFound(res, 'Không tìm thấy sản phẩm');
-    return res.status(200).json(rows[0]);
+    const product = rows[0];
+    if (!product) return notFound(res, 'Không tìm thấy sản phẩm');
+
+    if (!includes.related && !includes.featured) {
+      setPublicCache(res, { sMaxAge: 60, staleWhileRevalidate: 300 });
+      return res.status(200).json(product);
+    }
+
+    // Bundled detail: chạy thêm related + featured trong cùng 1 function
+    // → tiết kiệm 2 round trip cold-start so với gọi 3 endpoint riêng.
+    const productId = product.id as number;
+    const productCategoryId = product.category_id as number;
+
+    const relatedPromise = includes.related
+      ? sql`
+          SELECT p.id, p.category_id, p.name, p.slug, p.price,
+                 p.sale_price, p.sale_end_at,
+                 p.image_url, p.colors,
+                 p.is_active, p.is_hero, p.featured_rank,
+                 p.created_at, p.updated_at,
+                 c.name AS category_name, c.slug AS category_slug
+          FROM products p
+          JOIN categories c ON c.id = p.category_id
+          WHERE p.category_id = ${productCategoryId}
+            AND p.id <> ${productId}
+          ORDER BY p.is_active DESC, p.created_at DESC
+          LIMIT ${RELATED_LIMIT}
+        `
+      : Promise.resolve([] as Record<string, unknown>[]);
+
+    const featuredPromise = includes.featured
+      ? sql`
+          SELECT p.id, p.category_id, p.name, p.slug, p.price,
+                 p.sale_price, p.sale_end_at,
+                 p.image_url, p.colors,
+                 p.is_active, p.featured_rank,
+                 p.created_at, p.updated_at,
+                 c.name AS category_name, c.slug AS category_slug
+          FROM products p
+          JOIN categories c ON c.id = p.category_id
+          WHERE p.featured_rank IS NOT NULL
+            AND p.id <> ${productId}
+          ORDER BY p.featured_rank ASC
+          LIMIT ${FEATURED_LIMIT}
+        `
+      : Promise.resolve([] as Record<string, unknown>[]);
+
+    const [related, featured] = await Promise.all([relatedPromise, featuredPromise]);
+
+    setPublicCache(res, { sMaxAge: 60, staleWhileRevalidate: 300 });
+    return res.status(200).json({
+      product,
+      related: includes.related ? related : undefined,
+      featured: includes.featured ? featured : undefined,
+    });
   }
 
   if (req.method === 'PUT' || req.method === 'PATCH') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const body = (req.body ?? {}) as {
       name?: string;
       slug?: string;
@@ -142,6 +220,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === 'DELETE') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const rows = (await sql`
       DELETE FROM products
       WHERE (${ident.id ?? null}::int IS NOT NULL AND id = ${ident.id ?? null}::int)

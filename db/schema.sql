@@ -41,6 +41,20 @@ CREATE INDEX IF NOT EXISTS idx_products_active   ON products(is_active);
 CREATE INDEX IF NOT EXISTS idx_products_featured ON products(featured_rank) WHERE featured_rank IS NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_products_hero ON products(is_hero) WHERE is_hero = TRUE;
 
+-- Tối ưu cho ORDER BY p.is_active DESC, p.created_at DESC (list endpoint)
+CREATE INDEX IF NOT EXISTS idx_products_listing
+  ON products(is_active DESC, created_at DESC);
+
+-- Tối ưu lookup theo slug (đã có UNIQUE nhưng ghi rõ ý đồ).
+-- Postgres tự tạo index cho UNIQUE constraint, nên không cần index riêng.
+-- (Để lại comment cho người đọc khỏi nhầm tưởng quên.)
+
+-- Tối ưu name search (ILIKE %q%) cho thanh tìm kiếm.
+-- pg_trgm cho phép GIN index hỗ trợ ILIKE pattern matching.
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX IF NOT EXISTS idx_products_name_trgm
+  ON products USING gin (name gin_trgm_ops);
+
 CREATE TABLE IF NOT EXISTS admins (
   id            SERIAL PRIMARY KEY,
   username      VARCHAR(80) NOT NULL UNIQUE,

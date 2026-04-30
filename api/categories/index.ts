@@ -1,25 +1,34 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '../_lib/db.js';
 import { requireAdmin } from '../_lib/auth.js';
-import { badRequest, handlePreflight, methodNotAllowed, slugify } from '../_lib/http.js';
+import {
+  badRequest,
+  handlePreflight,
+  methodNotAllowed,
+  setNoStore,
+  setPublicCache,
+  slugify,
+} from '../_lib/http.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handlePreflight(req, res)) return;
 
   if (req.method === 'GET') {
+    // Subquery trên idx_products_category nhanh hơn LEFT JOIN + GROUP BY
+    // khi số sản phẩm tăng dần.
     const rows = await sql`
       SELECT c.id, c.name, c.slug, c.image_url, c.description, c.created_at, c.updated_at,
-             COUNT(p.id)::int AS product_count
+             (SELECT COUNT(*)::int FROM products p WHERE p.category_id = c.id) AS product_count
       FROM categories c
-      LEFT JOIN products p ON p.category_id = c.id
-      GROUP BY c.id
       ORDER BY c.name ASC
     `;
+    setPublicCache(res, { sMaxAge: 300, staleWhileRevalidate: 1800 });
     return res.status(200).json(rows);
   }
 
   if (req.method === 'POST') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const body = (req.body ?? {}) as {
       name?: string;
       slug?: string;

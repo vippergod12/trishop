@@ -54,10 +54,13 @@ export default function HeroEditorial({ categories, products, hero, loading }: P
         </div>
 
         <div className="hero-edit-headline">
-          <h1>
-            <span>Designed</span>
-            <span className="hero-edit-italic">for everyday</span>
-            <span>elegance.</span>
+          <h1 className="hero-edit-title">
+            <span className="hero-edit-title-statement">Thanh lịch</span>
+            <span className="hero-edit-title-eyebrow">
+              <span className="hero-edit-title-rule" aria-hidden />
+              trong từng
+            </span>
+            <span className="hero-edit-title-accent">khoảnh khắc.</span>
           </h1>
         </div>
 
@@ -68,6 +71,9 @@ export default function HeroEditorial({ categories, products, hero, loading }: P
                 src={heroImage as string}
                 alt={heroAlt}
                 onError={() => setImgError(true)}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
               />
             ) : (
               <div className="hero-edit-image-skeleton" aria-hidden>

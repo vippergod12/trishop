@@ -1,12 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../services/api';
 import type { Product } from '../types';
 import { formatVnd } from '../utils/format';
 import { getSaleInfo } from '../utils/sale';
 import { SaleBadge } from '../components/SaleBadge';
-import ProductCarousel from '../components/ProductCarousel';
 import { ZALO_ENABLED, ZALO_URL } from '../utils/zalo';
+
+// ProductCarousel dùng Swiper. Lazy để Swiper không cản trở
+// LCP của ảnh sản phẩm chính.
+const ProductCarousel = lazy(() => import('../components/ProductCarousel'));
 
 function formatSaleEnd(date: Date): string {
   return date.toLocaleString('vi-VN', {
@@ -68,36 +71,31 @@ export default function ProductDetailPage() {
     setSelectedColor(null);
     window.scrollTo({ top: 0, behavior: 'auto' });
 
-    api
-      .getProduct(slug)
-      .then((p) => {
-        setProduct(p);
-        if (Array.isArray(p.colors) && p.colors.length === 1) setSelectedColor(p.colors[0]);
-      })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [slug]);
-
-  // Sau khi có product, fetch các nhóm gợi ý
-  useEffect(() => {
-    if (!product) return;
     let cancelled = false;
-    Promise.all([
-      api.listProducts({ category: product.category_slug ?? product.category_id }),
-      api.listFeaturedProducts(),
-    ])
-      .then(([sameCat, featured]) => {
+    api
+      .getProductDetail(slug)
+      .then((bundle) => {
         if (cancelled) return;
-        setRelated(sameCat.filter((p) => p.id !== product.id).slice(0, 12));
-        setHot(featured.filter((p) => p.id !== product.id).slice(0, 12));
+        setProduct(bundle.product);
+        if (
+          Array.isArray(bundle.product.colors) &&
+          bundle.product.colors.length === 1
+        ) {
+          setSelectedColor(bundle.product.colors[0]);
+        }
+        setRelated((bundle.related ?? []).slice(0, 12));
+        setHot((bundle.featured ?? []).slice(0, 12));
       })
-      .catch(() => {
-        /* không có thì thôi, không cản trở trang chính */
+      .catch((err: Error) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
       });
     return () => {
       cancelled = true;
     };
-  }, [product]);
+  }, [slug]);
 
   const sale = useMemo(() => (product ? getSaleInfo(product) : null), [product]);
 
@@ -124,7 +122,13 @@ export default function ProductDetailPage() {
           <div className={`product-detail ${!product.is_active ? 'is-soldout' : ''}`}>
           <div className="product-detail-media">
             {product.image_url ? (
-              <img src={product.image_url} alt={product.name} />
+              <img
+                src={product.image_url}
+                alt={product.name}
+                loading="eager"
+                fetchPriority="high"
+                decoding="async"
+              />
             ) : (
               <div className="product-card-placeholder">No image</div>
             )}
@@ -267,20 +271,24 @@ export default function ProductDetailPage() {
         </div>
       )}
 
-      {related.length > 0 && (
-        <ProductCarousel
-          eyebrow="Cùng danh mục"
-          title={`Sản phẩm khác trong "${product.category_name}"`}
-          products={related}
-        />
-      )}
+      {(related.length > 0 || hot.length > 0) && (
+        <Suspense fallback={null}>
+          {related.length > 0 && (
+            <ProductCarousel
+              eyebrow="Cùng danh mục"
+              title={`Sản phẩm khác trong "${product.category_name}"`}
+              products={related}
+            />
+          )}
 
-      {hot.length > 0 && (
-        <ProductCarousel
-          eyebrow="★ Hot"
-          title="Đang được săn đón"
-          products={hot}
-        />
+          {hot.length > 0 && (
+            <ProductCarousel
+              eyebrow="★ Hot"
+              title="Đang được săn đón"
+              products={hot}
+            />
+          )}
+        </Suspense>
       )}
     </>
   );

@@ -57,7 +57,13 @@ export default function TrendingGrid({ products, loading }: Props) {
                 >
                   <div className="trending-image">
                     {p.image_url ? (
-                      <img src={p.image_url} alt={p.name} draggable={false} />
+                      <img
+                        src={p.image_url}
+                        alt={p.name}
+                        loading="lazy"
+                        decoding="async"
+                        draggable={false}
+                      />
                     ) : (
                       <div className="product-card-placeholder">No image</div>
                     )}

@@ -1,7 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { sql } from '../_lib/db.js';
 import { requireAdmin } from '../_lib/auth.js';
-import { badRequest, handlePreflight, methodNotAllowed, slugify } from '../_lib/http.js';
+import {
+  badRequest,
+  handlePreflight,
+  methodNotAllowed,
+  setNoStore,
+  setPublicCache,
+  slugify,
+} from '../_lib/http.js';
+
+const DEFAULT_LIST_LIMIT = 60;
+const MAX_LIST_LIMIT = 200;
 
 function getQueryString(req: VercelRequest, key: string): string | undefined {
   const value = req.query[key];
@@ -31,13 +41,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'GET') {
     const categoryRaw = getQueryString(req, 'category');
     const search = (getQueryString(req, 'q') ?? '').trim();
+    const limitRaw = getQueryString(req, 'limit');
+    const limit = (() => {
+      const n = Number(limitRaw);
+      if (!Number.isFinite(n) || n <= 0) return DEFAULT_LIST_LIMIT;
+      return Math.min(Math.floor(n), MAX_LIST_LIMIT);
+    })();
 
     const categoryId = categoryRaw && /^\d+$/.test(categoryRaw) ? Number(categoryRaw) : null;
     const categorySlug = categoryRaw && !categoryId ? categoryRaw : null;
     const searchTerm = search ? `%${search}%` : null;
 
+    // Bỏ p.description khỏi list (cột text dài, không dùng cho card).
     const rows = await sql`
-      SELECT p.id, p.category_id, p.name, p.slug, p.description, p.price,
+      SELECT p.id, p.category_id, p.name, p.slug, p.price,
              p.sale_price, p.sale_end_at,
              p.image_url, p.colors,
              p.is_active, p.is_hero, p.featured_rank,
@@ -49,12 +66,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         AND (${categorySlug}::text IS NULL OR c.slug = ${categorySlug}::text)
         AND (${searchTerm}::text IS NULL OR p.name ILIKE ${searchTerm}::text)
       ORDER BY p.is_active DESC, p.created_at DESC
+      LIMIT ${limit}
     `;
+    setPublicCache(res, { sMaxAge: 60, staleWhileRevalidate: 300 });
     return res.status(200).json(rows);
   }
 
   if (req.method === 'POST') {
     if (!requireAdmin(req, res)) return;
+    setNoStore(res);
     const body = (req.body ?? {}) as {
       name?: string;
       slug?: string;
