@@ -189,6 +189,21 @@ img { display: block; max-width: 100%; }
 .navbar-links a.active { background: var(--primary); color: #fff; }
 
 .dropdown { position: relative; }
+
+.dropdown::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: -8px;
+  right: -8px;
+  height: 12px;
+  pointer-events: none;
+}
+.dropdown:hover::after,
+.dropdown:focus-within::after {
+  pointer-events: auto;
+}
+
 .dropdown-toggle::after {
   content: ' ▾';
   font-size: 10px;
@@ -197,8 +212,9 @@ img { display: block; max-width: 100%; }
 .dropdown-menu {
   position: absolute;
   left: 0;
-  top: calc(100% + 8px);
-  min-width: 220px;
+  top: calc(100% + 6px);
+  min-width: 240px;
+  max-height: min(60vh, 480px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -206,11 +222,28 @@ img { display: block; max-width: 100%; }
   padding: 8px;
   display: none;
   flex-direction: column;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
+  overscroll-behavior: contain;
 }
 .dropdown:hover .dropdown-menu,
 .dropdown:focus-within .dropdown-menu { display: flex; }
-.dropdown-menu a { padding: 10px 14px; border-radius: 6px; font-size: 14px; }
+.dropdown-menu a {
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  flex-shrink: 0;
+}
 .dropdown-empty { color: var(--text-muted); padding: 10px 14px; font-size: 13px; }
+
+.dropdown-menu::-webkit-scrollbar { width: 6px; }
+.dropdown-menu::-webkit-scrollbar-track { background: transparent; }
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+  border-radius: 999px;
+}
+.dropdown-menu::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.32); }
 
 .navbar-toggle {
   display: none;
@@ -239,7 +272,13 @@ img { display: block; max-width: 100%; }
     display: none;
   }
   .navbar-links.open { display: flex; }
-  .dropdown-menu { position: static; box-shadow: none; border: none; padding-left: 16px; }
+  .dropdown-menu {
+    position: static;
+    box-shadow: none;
+    border: none;
+    padding-left: 16px;
+    max-height: 280px;
+  }
 }
 
 /* ===================================================================

@@ -12,7 +12,6 @@ export default function Footer() {
             <span className="footer-logo-text">D-SHOP</span>
           </div>
           <p className="footer-tag">
-            Shop demo CRUD sản phẩm với React + Node + Neon Postgres.
           </p>
           <ul className="footer-contact">
             <li>
@@ -118,7 +117,6 @@ export default function Footer() {
       <div className="footer-bottom">
         <div className="container">
           <p>© Bản quyền thuộc về D-Shop {year}. Tất cả các quyền được bảo lưu.</p>
-          <p>Demo CRUD sản phẩm với React + Node + Neon Postgres · Deploy trên Vercel.</p>
         </div>
       </div>
     </footer>
