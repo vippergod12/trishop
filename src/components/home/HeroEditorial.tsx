@@ -6,10 +6,9 @@ interface Props {
   products: Product[];
   /** Sản phẩm hero được admin chọn (ưu tiên cao nhất). null = chưa cấu hình. */
   hero?: Product | null;
+  /** Đang fetch dữ liệu lần đầu — chưa đủ thông tin để chọn ảnh */
+  loading?: boolean;
 }
-
-const FALLBACK_IMAGE =
-  'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=1600&auto=format&fit=crop';
 
 function pickImage(items: Array<{ image_url?: string | null }>): string | null {
   for (const it of items) {
@@ -19,7 +18,7 @@ function pickImage(items: Array<{ image_url?: string | null }>): string | null {
   return null;
 }
 
-export default function HeroEditorial({ categories, products, hero }: Props) {
+export default function HeroEditorial({ categories, products, hero, loading }: Props) {
   const [time, setTime] = useState(() => new Date());
   const [imgError, setImgError] = useState(false);
 
@@ -28,20 +27,22 @@ export default function HeroEditorial({ categories, products, hero }: Props) {
     return () => clearInterval(id);
   }, []);
 
-  const heroImage = useMemo(() => {
+  const heroImage = useMemo<string | null>(() => {
     const fromAdmin = hero?.image_url?.trim();
     if (fromAdmin) return fromAdmin;
-    return pickImage(products) ?? pickImage(categories) ?? FALLBACK_IMAGE;
+    return pickImage(products) ?? pickImage(categories) ?? null;
   }, [hero?.image_url, products, categories]);
 
-  const heroAlt = hero?.name ?? '';
+  const heroAlt = hero?.name ?? 'D-Shop hero';
 
   useEffect(() => {
     setImgError(false);
   }, [heroImage]);
 
   const monthYear = time.toLocaleString('en-US', { month: 'short', year: 'numeric' }).toUpperCase();
-  const finalSrc = imgError ? FALLBACK_IMAGE : heroImage;
+  // Chỉ render <img> khi đã fetch xong và có URL hợp lệ.
+  // Trong lúc đợi (hoặc lỗi tải / không có ảnh nào) → render placeholder gradient.
+  const showImage = !loading && !!heroImage && !imgError;
 
   return (
     <section className="hero-editorial">
@@ -61,12 +62,18 @@ export default function HeroEditorial({ categories, products, hero }: Props) {
         </div>
 
         <div className="hero-edit-side">
-          <div className="hero-edit-image">
-            <img
-              src={finalSrc}
-              alt={heroAlt}
-              onError={() => setImgError(true)}
-            />
+          <div className={`hero-edit-image ${showImage ? '' : 'is-placeholder'}`}>
+            {showImage ? (
+              <img
+                src={heroImage as string}
+                alt={heroAlt}
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <div className="hero-edit-image-skeleton" aria-hidden>
+                <span className="hero-edit-image-mark">D</span>
+              </div>
+            )}
           </div>
           <p className="hero-edit-desc">
             Bộ sưu tập tối giản, chất liệu tốt, mức giá hợp lý.

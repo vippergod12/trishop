@@ -39,7 +39,7 @@ export default function HomePage() {
 
   return (
     <div className="home">
-      <HeroEditorial categories={categories} products={products} hero={hero} />
+      <HeroEditorial categories={categories} products={products} hero={hero} loading={loading} />
       <Marquee />
       <HotBento products={hotProducts} loading={loading} />
       <CategoryStrip categories={categories} loading={loading} />
