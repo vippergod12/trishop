@@ -3,6 +3,7 @@ import { api } from '../../services/api';
 import type { Category } from '../../types';
 import Modal from '../../components/Modal';
 import ImagePicker from '../../components/ImagePicker';
+import RowActions from '../../components/RowActions';
 
 interface FormState {
   id?: number;
@@ -134,10 +135,12 @@ export default function AdminCategoriesPage() {
                   <td><code>{c.slug}</code></td>
                   <td>{c.product_count ?? 0}</td>
                   <td>
-                    <div className="actions">
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(c)}>Sửa</button>
-                      <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(c)}>Xoá</button>
-                    </div>
+                    <RowActions
+                      actions={[
+                        { label: 'Sửa', onClick: () => openEdit(c) },
+                        { label: 'Xoá', onClick: () => onDelete(c), variant: 'danger' },
+                      ]}
+                    />
                   </td>
                 </tr>
               ))}
