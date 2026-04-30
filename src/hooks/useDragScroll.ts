@@ -47,6 +47,8 @@ export function useDragScroll(ref: RefObject<HTMLElement | null>) {
       if (target.closest('button, input, select, textarea')) return;
       if (!el) return;
 
+      e.preventDefault();
+
       isDown = true;
       movedDistance = 0;
       startX = e.clientX;
@@ -58,10 +60,16 @@ export function useDragScroll(ref: RefObject<HTMLElement | null>) {
       window.addEventListener('pointercancel', onPointerUp);
     }
 
+    function onDragStart(e: DragEvent) {
+      e.preventDefault();
+    }
+
     el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('dragstart', onDragStart);
 
     return () => {
       el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('dragstart', onDragStart);
       window.removeEventListener('pointermove', onPointerMove);
       window.removeEventListener('pointerup', onPointerUp);
       window.removeEventListener('pointercancel', onPointerUp);

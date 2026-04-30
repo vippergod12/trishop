@@ -53,10 +53,10 @@ export default function CategoryStrip({ categories, loading }: Props) {
                 delay={i * 60}
                 className="strip-cell"
               >
-                <Link to={`/danh-muc/${c.slug}`} className="strip-card">
+                <Link to={`/danh-muc/${c.slug}`} className="strip-card" draggable={false}>
                   <div className="strip-image">
                     {c.image_url ? (
-                      <img src={c.image_url} alt={c.name} />
+                      <img src={c.image_url} alt={c.name} draggable={false} />
                     ) : (
                       <div className="strip-fallback">
                         <span>{c.name.charAt(0).toUpperCase()}</span>
