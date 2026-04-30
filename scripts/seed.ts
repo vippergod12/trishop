@@ -89,6 +89,8 @@ async function main() {
     price: number;
     image_url: string;
     category_slug: string;
+    sale_price?: number;
+    sale_end_at?: string;
   }[] = [
     // Áo
     {
@@ -96,6 +98,8 @@ async function main() {
       name: 'Áo thun basic trắng',
       description: 'Áo thun cotton 100%, mềm mại, thoáng mát.',
       price: 199000,
+      sale_price: 129000,
+      sale_end_at: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
       image_url: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=900&auto=format&fit=crop',
       category_slug: 'ao',
     },
@@ -112,6 +116,8 @@ async function main() {
       name: 'Áo blazer be',
       description: 'Blazer dáng công sở, lịch sự sang trọng.',
       price: 899000,
+      sale_price: 599000,
+      sale_end_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       image_url: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=900&auto=format&fit=crop',
       category_slug: 'ao',
     },
@@ -246,8 +252,9 @@ async function main() {
 
   for (const p of products) {
     await sql`
-      INSERT INTO products (category_id, name, slug, description, price, image_url)
-      SELECT c.id, ${p.name}, ${p.slug}, ${p.description}, ${p.price}, ${p.image_url}
+      INSERT INTO products (category_id, name, slug, description, price, sale_price, sale_end_at, image_url)
+      SELECT c.id, ${p.name}, ${p.slug}, ${p.description}, ${p.price},
+             ${p.sale_price ?? null}, ${p.sale_end_at ?? null}, ${p.image_url}
       FROM categories c
       WHERE c.slug = ${p.category_slug}
       ON CONFLICT (slug) DO NOTHING

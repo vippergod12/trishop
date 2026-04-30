@@ -4,6 +4,8 @@ import type { Category, Product } from '../../types';
 interface Props {
   categories: Category[];
   products: Product[];
+  /** Sản phẩm hero được admin chọn (ưu tiên cao nhất). null = chưa cấu hình. */
+  hero?: Product | null;
 }
 
 const FALLBACK_IMAGE =
@@ -17,7 +19,7 @@ function pickImage(items: Array<{ image_url?: string | null }>): string | null {
   return null;
 }
 
-export default function HeroEditorial({ categories, products }: Props) {
+export default function HeroEditorial({ categories, products, hero }: Props) {
   const [time, setTime] = useState(() => new Date());
   const [imgError, setImgError] = useState(false);
 
@@ -27,8 +29,12 @@ export default function HeroEditorial({ categories, products }: Props) {
   }, []);
 
   const heroImage = useMemo(() => {
+    const fromAdmin = hero?.image_url?.trim();
+    if (fromAdmin) return fromAdmin;
     return pickImage(products) ?? pickImage(categories) ?? FALLBACK_IMAGE;
-  }, [products, categories]);
+  }, [hero?.image_url, products, categories]);
+
+  const heroAlt = hero?.name ?? '';
 
   useEffect(() => {
     setImgError(false);
@@ -58,7 +64,7 @@ export default function HeroEditorial({ categories, products }: Props) {
           <div className="hero-edit-image">
             <img
               src={finalSrc}
-              alt=""
+              alt={heroAlt}
               onError={() => setImgError(true)}
             />
           </div>

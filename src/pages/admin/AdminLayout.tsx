@@ -14,6 +14,7 @@ export default function AdminLayout() {
         <nav className="admin-nav">
           <NavLink to="/admin/categories">Danh mục</NavLink>
           <NavLink to="/admin/products">Sản phẩm</NavLink>
+          <NavLink to="/admin/featured">Tiêu biểu</NavLink>
           <Link to="/" target="_blank" rel="noreferrer">Xem website ↗</Link>
         </nav>
         <div className="admin-user">

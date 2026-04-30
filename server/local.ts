@@ -8,6 +8,8 @@ import meHandler from '../api/auth/me.js';
 import categoriesIndex from '../api/categories/index.js';
 import categoryById from '../api/categories/[id].js';
 import productsIndex from '../api/products/index.js';
+import productsFeatured from '../api/products/featured.js';
+import productsHero from '../api/products/hero.js';
 import productById from '../api/products/[id].js';
 
 type VercelLikeHandler = (req: VercelRequest, res: VercelResponse) => unknown | Promise<unknown>;
@@ -43,8 +45,13 @@ app.delete('/api/categories/:id', adapt(categoryById, 'id'));
 
 app.get('/api/products', adapt(productsIndex));
 app.post('/api/products', adapt(productsIndex));
+app.get('/api/products/featured', adapt(productsFeatured));
+app.put('/api/products/featured', adapt(productsFeatured));
+app.get('/api/products/hero', adapt(productsHero));
+app.put('/api/products/hero', adapt(productsHero));
 app.get('/api/products/:id', adapt(productById, 'id'));
 app.put('/api/products/:id', adapt(productById, 'id'));
+app.patch('/api/products/:id', adapt(productById, 'id'));
 app.delete('/api/products/:id', adapt(productById, 'id'));
 
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {

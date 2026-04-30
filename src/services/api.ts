@@ -83,7 +83,31 @@ export const api = {
       body: JSON.stringify(input),
     });
   },
+  setProductActive(id: number, isActive: boolean) {
+    return request<Product>(`/api/products/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_active: isActive }),
+    });
+  },
   deleteProduct(id: number) {
     return request<void>(`/api/products/${id}`, { method: 'DELETE' });
+  },
+  listFeaturedProducts() {
+    return request<Product[]>('/api/products/featured');
+  },
+  setFeaturedProducts(ids: number[]) {
+    return request<{ count: number; ids: number[] }>('/api/products/featured', {
+      method: 'PUT',
+      body: JSON.stringify({ ids }),
+    });
+  },
+  getHeroProduct() {
+    return request<Product | null>('/api/products/hero');
+  },
+  setHeroProduct(id: number | null) {
+    return request<Product | null>('/api/products/hero', {
+      method: 'PUT',
+      body: JSON.stringify({ id }),
+    });
   },
 };

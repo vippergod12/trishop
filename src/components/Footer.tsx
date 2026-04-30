@@ -7,10 +7,14 @@ export default function Footer() {
     <footer className="footer">
       <div className="container footer-inner">
         <div className="footer-col footer-brand-col">
-          <div className="footer-logo">
+          <Link
+            to="/"
+            className="footer-logo"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          >
             <span className="brand-mark">D</span>
             <span className="footer-logo-text">D-SHOP</span>
-          </div>
+          </Link>
           <p className="footer-tag">
           </p>
           <ul className="footer-contact">

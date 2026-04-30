@@ -7,6 +7,7 @@ import LoginPage from './pages/admin/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
 import AdminProductsPage from './pages/admin/AdminProductsPage';
+import AdminFeaturedPage from './pages/admin/AdminFeaturedPage';
 import { useAuth } from './contexts/AuthContext';
 
 function ProtectedAdmin({ children }: { children: React.ReactNode }) {
@@ -37,6 +38,7 @@ export default function App() {
         <Route index element={<Navigate to="categories" replace />} />
         <Route path="categories" element={<AdminCategoriesPage />} />
         <Route path="products" element={<AdminProductsPage />} />
+        <Route path="featured" element={<AdminFeaturedPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

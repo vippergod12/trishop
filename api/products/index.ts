@@ -9,6 +9,22 @@ function getQueryString(req: VercelRequest, key: string): string | undefined {
   return value;
 }
 
+function parseStringArray(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const item of input) {
+    if (typeof item !== 'string') continue;
+    const trimmed = item.trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(trimmed);
+  }
+  return out;
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handlePreflight(req, res)) return;
 
@@ -21,16 +37,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const searchTerm = search ? `%${search}%` : null;
 
     const rows = await sql`
-      SELECT p.id, p.category_id, p.name, p.slug, p.description, p.price, p.image_url, p.is_active,
+      SELECT p.id, p.category_id, p.name, p.slug, p.description, p.price,
+             p.sale_price, p.sale_end_at,
+             p.image_url, p.colors,
+             p.is_active, p.is_hero, p.featured_rank,
              p.created_at, p.updated_at,
              c.name AS category_name, c.slug AS category_slug
       FROM products p
       JOIN categories c ON c.id = p.category_id
-      WHERE p.is_active = TRUE
-        AND (${categoryId}::int IS NULL OR p.category_id = ${categoryId}::int)
+      WHERE (${categoryId}::int IS NULL OR p.category_id = ${categoryId}::int)
         AND (${categorySlug}::text IS NULL OR c.slug = ${categorySlug}::text)
         AND (${searchTerm}::text IS NULL OR p.name ILIKE ${searchTerm}::text)
-      ORDER BY p.created_at DESC
+      ORDER BY p.is_active DESC, p.created_at DESC
     `;
     return res.status(200).json(rows);
   }
@@ -42,9 +60,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       slug?: string;
       description?: string;
       price?: number | string;
+      sale_price?: number | string | null;
+      sale_end_at?: string | null;
       image_url?: string;
       category_id?: number | string;
       is_active?: boolean;
+      colors?: unknown;
     };
     const name = (body.name ?? '').trim();
     const categoryId = Number(body.category_id);
@@ -52,15 +73,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!name) return badRequest(res, 'Tên sản phẩm không được trống');
     if (!categoryId) return badRequest(res, 'Cần chọn danh mục');
     if (Number.isNaN(price) || price < 0) return badRequest(res, 'Giá không hợp lệ');
+
+    const rawSalePrice = body.sale_price;
+    const salePrice =
+      rawSalePrice === null || rawSalePrice === undefined || rawSalePrice === ''
+        ? null
+        : Number(rawSalePrice);
+    if (salePrice !== null && (Number.isNaN(salePrice) || salePrice < 0)) {
+      return badRequest(res, 'Giá sale không hợp lệ');
+    }
+    const saleEndAt = body.sale_end_at ? new Date(body.sale_end_at) : null;
+    if (saleEndAt && Number.isNaN(saleEndAt.getTime())) {
+      return badRequest(res, 'Thời gian kết thúc sale không hợp lệ');
+    }
+    const saleEndIso = saleEndAt ? saleEndAt.toISOString() : null;
+
+    const colors = parseStringArray(body.colors);
     const slug = (body.slug && body.slug.trim()) || slugify(name);
     const isActive = body.is_active ?? true;
 
     try {
       const rows = (await sql`
-        INSERT INTO products (category_id, name, slug, description, price, image_url, is_active)
+        INSERT INTO products (category_id, name, slug, description, price,
+                              sale_price, sale_end_at, image_url,
+                              colors, is_active)
         VALUES (${categoryId}, ${name}, ${slug}, ${body.description ?? null}, ${price},
-                ${body.image_url ?? null}, ${isActive})
-        RETURNING id, category_id, name, slug, description, price, image_url, is_active,
+                ${salePrice}, ${saleEndIso},
+                ${body.image_url ?? null},
+                ${colors}::text[], ${isActive})
+        RETURNING id, category_id, name, slug, description, price,
+                  sale_price, sale_end_at,
+                  image_url, colors,
+                  is_active, is_hero, featured_rank,
                   created_at, updated_at
       `) as Record<string, unknown>[];
       return res.status(201).json(rows[0]);

@@ -16,8 +16,13 @@ export interface Product {
   slug: string;
   description: string | null;
   price: number;
+  sale_price: number | null;
+  sale_end_at: string | null;
   image_url: string | null;
+  colors: string[];
   is_active: boolean;
+  is_hero: boolean;
+  featured_rank: number | null;
   created_at?: string;
   updated_at?: string;
   category_name?: string;

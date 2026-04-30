@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       SELECT c.id, c.name, c.slug, c.image_url, c.description, c.created_at, c.updated_at,
              COUNT(p.id)::int AS product_count
       FROM categories c
-      LEFT JOIN products p ON p.category_id = c.id AND p.is_active = TRUE
+      LEFT JOIN products p ON p.category_id = c.id
       GROUP BY c.id
       ORDER BY c.name ASC
     `;

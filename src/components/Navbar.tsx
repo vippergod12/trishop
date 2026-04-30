@@ -26,7 +26,11 @@ export default function Navbar() {
   return (
     <header className={`navbar ${scrolled ? 'navbar-scrolled' : ''}`}>
       <div className="container navbar-inner">
-        <Link to="/" className="navbar-brand">
+        <Link
+          to="/"
+          className="navbar-brand"
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        >
           <span className="brand-mark">D</span>
           <span>Shop</span>
         </Link>

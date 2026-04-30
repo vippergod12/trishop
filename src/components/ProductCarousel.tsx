@@ -1,50 +1,68 @@
-import { Link } from 'react-router-dom';
+import { useId, useRef } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
+import type { Swiper as SwiperClass } from 'swiper/types';
 import { Navigation, Pagination, A11y, Keyboard } from 'swiper/modules';
-import type { Category } from '../../types';
-import Reveal from '../Reveal';
+import type { Product } from '../types';
+import ProductCard from './ProductCard';
+import Reveal from './Reveal';
 
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 
 interface Props {
-  categories: Category[];
-  loading?: boolean;
+  title: string;
+  eyebrow?: string;
+  products: Product[];
+  /** Ẩn cả section khi không có sản phẩm (mặc định true) */
+  hideWhenEmpty?: boolean;
 }
 
-export default function CategoryStrip({ categories, loading }: Props) {
-  if (loading) return null;
-  if (categories.length === 0) return null;
+export default function ProductCarousel({
+  title,
+  eyebrow,
+  products,
+  hideWhenEmpty = true,
+}: Props) {
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const prevClass = `pc-prev-${uid}`;
+  const nextClass = `pc-next-${uid}`;
+  const paginationClass = `pc-pagination-${uid}`;
+  const swiperRef = useRef<SwiperClass | null>(null);
+
+  if (hideWhenEmpty && products.length === 0) return null;
 
   return (
-    <section className="section section-strip">
+    <section className="section product-carousel-section">
       <div className="container">
         <Reveal variant="fade-up">
-          <div className="strip-heading">
+          <div className="product-carousel-head">
             <div>
-              <span className="section-eyebrow">Tuyển chọn</span>
-              <h2>Khám phá theo danh mục</h2>
+              {eyebrow && <span className="section-eyebrow">{eyebrow}</span>}
+              <h2>{title}</h2>
             </div>
-            <p className="strip-hint">Kéo ngang để xem thêm →</p>
+            <span className="product-carousel-hint">{products.length} sản phẩm</span>
           </div>
         </Reveal>
 
-        <div className="strip-carousel">
+        <div className="product-carousel">
           <Swiper
             modules={[Navigation, Pagination, A11y, Keyboard]}
+            onSwiper={(s) => {
+              swiperRef.current = s;
+            }}
             spaceBetween={20}
             slidesPerView={1.2}
             slidesPerGroup={1}
-            speed={550}
+            speed={500}
             grabCursor
             keyboard={{ enabled: true }}
             navigation={{
-              prevEl: '.strip-nav-prev',
-              nextEl: '.strip-nav-next',
+              prevEl: `.${prevClass}`,
+              nextEl: `.${nextClass}`,
             }}
             pagination={{
-              el: '.strip-pagination',
+              el: `.${paginationClass}`,
               clickable: true,
               dynamicBullets: true,
               dynamicMainBullets: 4,
@@ -56,32 +74,16 @@ export default function CategoryStrip({ categories, loading }: Props) {
               1024: { slidesPerView: 4, slidesPerGroup: 4, spaceBetween: 22 },
             }}
           >
-            {categories.map((c, i) => (
-              <SwiperSlide key={c.id} className="strip-slide">
-                <Link to={`/danh-muc/${c.slug}`} className="strip-card" draggable={false}>
-                  <div className="strip-image">
-                    {c.image_url ? (
-                      <img src={c.image_url} alt={c.name} draggable={false} />
-                    ) : (
-                      <div className="strip-fallback">
-                        <span>{c.name.charAt(0).toUpperCase()}</span>
-                      </div>
-                    )}
-                    <div className="strip-overlay" aria-hidden />
-                    <span className="strip-num">{String(i + 1).padStart(2, '0')}</span>
-                  </div>
-                  <div className="strip-meta">
-                    <h3>{c.name}</h3>
-                    <span>{c.product_count ?? 0} sản phẩm →</span>
-                  </div>
-                </Link>
+            {products.map((p) => (
+              <SwiperSlide key={p.id} className="pc-slide">
+                <ProductCard product={p} />
               </SwiperSlide>
             ))}
           </Swiper>
 
           <button
             type="button"
-            className="strip-nav strip-nav-prev"
+            className={`pc-nav pc-nav-prev ${prevClass}`}
             aria-label="Trang trước"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -90,7 +92,7 @@ export default function CategoryStrip({ categories, loading }: Props) {
           </button>
           <button
             type="button"
-            className="strip-nav strip-nav-next"
+            className={`pc-nav pc-nav-next ${nextClass}`}
             aria-label="Trang sau"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -98,7 +100,7 @@ export default function CategoryStrip({ categories, loading }: Props) {
             </svg>
           </button>
 
-          <div className="strip-pagination" />
+          <div className={`pc-pagination ${paginationClass}`} />
         </div>
       </div>
     </section>

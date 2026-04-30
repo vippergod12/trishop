@@ -12,7 +12,7 @@ export function useDragScroll(ref: RefObject<HTMLElement | null>) {
     let scrollStart = 0;
     let movedDistance = 0;
 
-    function onPointerMove(e: PointerEvent) {
+    function onMouseMove(e: MouseEvent) {
       if (!isDown || !el) return;
       e.preventDefault();
       const dx = e.clientX - startX;
@@ -21,14 +21,13 @@ export function useDragScroll(ref: RefObject<HTMLElement | null>) {
       el.scrollLeft = scrollStart - dx;
     }
 
-    function onPointerUp(_e: PointerEvent) {
+    function onMouseUp(_e: MouseEvent) {
       if (!isDown) return;
       isDown = false;
       el?.classList.remove('is-dragging');
 
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
 
       if (movedDistance > DRAG_THRESHOLD && el) {
         const blockClick = (ev: MouseEvent) => {
@@ -40,14 +39,11 @@ export function useDragScroll(ref: RefObject<HTMLElement | null>) {
       }
     }
 
-    function onPointerDown(e: PointerEvent) {
-      if (e.pointerType !== 'mouse') return;
+    function onMouseDown(e: MouseEvent) {
       if (e.button !== 0) return;
       const target = e.target as HTMLElement;
       if (target.closest('button, input, select, textarea')) return;
       if (!el) return;
-
-      e.preventDefault();
 
       isDown = true;
       movedDistance = 0;
@@ -55,24 +51,22 @@ export function useDragScroll(ref: RefObject<HTMLElement | null>) {
       scrollStart = el.scrollLeft;
       el.classList.add('is-dragging');
 
-      window.addEventListener('pointermove', onPointerMove, { passive: false });
-      window.addEventListener('pointerup', onPointerUp);
-      window.addEventListener('pointercancel', onPointerUp);
+      window.addEventListener('mousemove', onMouseMove, { passive: false });
+      window.addEventListener('mouseup', onMouseUp);
     }
 
     function onDragStart(e: DragEvent) {
       e.preventDefault();
     }
 
-    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('mousedown', onMouseDown);
     el.addEventListener('dragstart', onDragStart);
 
     return () => {
-      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('mousedown', onMouseDown);
       el.removeEventListener('dragstart', onDragStart);
-      window.removeEventListener('pointermove', onPointerMove);
-      window.removeEventListener('pointerup', onPointerUp);
-      window.removeEventListener('pointercancel', onPointerUp);
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
     };
   }, [ref]);
 }

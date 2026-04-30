@@ -3,7 +3,10 @@ import { api } from '../../services/api';
 import type { Category, Product } from '../../types';
 import Modal from '../../components/Modal';
 import ImagePicker from '../../components/ImagePicker';
+import TagInput from '../../components/TagInput';
+import Switch from '../../components/Switch';
 import { formatVnd } from '../../utils/format';
+import { fromDatetimeLocalValue, getSaleInfo, toDatetimeLocalValue } from '../../utils/sale';
 
 interface FormState {
   id?: number;
@@ -11,9 +14,12 @@ interface FormState {
   slug: string;
   description: string;
   price: string;
+  sale_price: string;
+  sale_end_at: string;
   image_url: string;
   category_id: string;
   is_active: boolean;
+  colors: string[];
 }
 
 const emptyForm: FormState = {
@@ -21,10 +27,15 @@ const emptyForm: FormState = {
   slug: '',
   description: '',
   price: '',
+  sale_price: '',
+  sale_end_at: '',
   image_url: '',
   category_id: '',
   is_active: true,
+  colors: [],
 };
+
+const COLOR_SUGGESTIONS = ['Đen', 'Trắng', 'Xám', 'Be', 'Hồng', 'Đỏ', 'Xanh navy', 'Xanh dương', 'Nâu', 'Vàng'];
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -71,9 +82,12 @@ export default function AdminProductsPage() {
       slug: p.slug,
       description: p.description ?? '',
       price: String(p.price ?? 0),
+      sale_price: p.sale_price != null ? String(p.sale_price) : '',
+      sale_end_at: toDatetimeLocalValue(p.sale_end_at),
       image_url: p.image_url ?? '',
       category_id: String(p.category_id),
       is_active: p.is_active,
+      colors: Array.isArray(p.colors) ? p.colors : [],
     });
     setError(null);
     setOpen(true);
@@ -88,9 +102,12 @@ export default function AdminProductsPage() {
       slug: form.slug || undefined,
       description: form.description || null,
       price: Number(form.price || 0),
+      sale_price: form.sale_price ? Number(form.sale_price) : null,
+      sale_end_at: form.sale_end_at ? fromDatetimeLocalValue(form.sale_end_at) : null,
       image_url: form.image_url || null,
       category_id: Number(form.category_id),
       is_active: form.is_active,
+      colors: form.colors,
     };
     try {
       if (form.id) {
@@ -104,6 +121,20 @@ export default function AdminProductsPage() {
       setError(err instanceof Error ? err.message : 'Lỗi không xác định');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function toggleActive(p: Product) {
+    setProducts((prev) =>
+      prev.map((it) => (it.id === p.id ? { ...it, is_active: !p.is_active } : it)),
+    );
+    try {
+      await api.setProductActive(p.id, !p.is_active);
+    } catch (err) {
+      setProducts((prev) =>
+        prev.map((it) => (it.id === p.id ? { ...it, is_active: p.is_active } : it)),
+      );
+      alert(err instanceof Error ? err.message : 'Cập nhật trạng thái thất bại');
     }
   }
 
@@ -174,7 +205,8 @@ export default function AdminProductsPage() {
                 <th>Tên</th>
                 <th>Danh mục</th>
                 <th>Giá</th>
-                <th>Trạng thái</th>
+                <th>Màu sắc</th>
+                <th>Còn hàng</th>
                 <th style={{ width: 160 }}></th>
               </tr>
             </thead>
@@ -194,11 +226,44 @@ export default function AdminProductsPage() {
                     <code className="cell-muted">{p.slug}</code>
                   </td>
                   <td>{p.category_name ?? categoryMap.get(p.category_id)?.name ?? '—'}</td>
-                  <td>{formatVnd(p.price)}</td>
+                  <td className="price-cell">
+                    {(() => {
+                      const info = getSaleInfo(p);
+                      if (!info.isOnSale) return formatVnd(p.price);
+                      return (
+                        <div className="price-cell-stack">
+                          <span className="price-sale">{formatVnd(info.effectivePrice)}</span>
+                          <span className="price-original">{formatVnd(info.originalPrice)}</span>
+                          <span className="price-sale-tag">SALE {info.saleRatio}%</span>
+                        </div>
+                      );
+                    })()}
+                  </td>
                   <td>
-                    <span className={`badge ${p.is_active ? 'badge-success' : 'badge-muted'}`}>
-                      {p.is_active ? 'Đang bán' : 'Ẩn'}
-                    </span>
+                    {p.colors && p.colors.length > 0 ? (
+                      <div className="cell-colors">
+                        {p.colors.slice(0, 3).map((c) => (
+                          <span key={c} className="color-pill">{c}</span>
+                        ))}
+                        {p.colors.length > 3 && (
+                          <span className="color-pill more">+{p.colors.length - 3}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="cell-muted">—</span>
+                    )}
+                  </td>
+                  <td>
+                    <div className="status-cell">
+                      <Switch
+                        checked={p.is_active}
+                        onChange={() => toggleActive(p)}
+                        ariaLabel={p.is_active ? 'Tắt còn hàng' : 'Bật còn hàng'}
+                      />
+                      <span className={`status-text ${p.is_active ? 'on' : 'off'}`}>
+                        {p.is_active ? 'Còn hàng' : 'Hết hàng'}
+                      </span>
+                    </div>
                   </td>
                   <td className="actions">
                     <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(p)}>Sửa</button>
@@ -242,7 +307,7 @@ export default function AdminProductsPage() {
               />
             </label>
             <label className="field">
-              <span>Giá (VND) *</span>
+              <span>Giá gốc (VND) *</span>
               <input
                 required
                 type="number"
@@ -253,6 +318,36 @@ export default function AdminProductsPage() {
               />
             </label>
           </div>
+          <fieldset className="field-group">
+            <legend>Khuyến mãi (tuỳ chọn)</legend>
+            <div className="form-row">
+              <label className="field">
+                <span>Giá sale (VND)</span>
+                <input
+                  type="number"
+                  min={0}
+                  step="1000"
+                  placeholder="Để trống nếu không có sale"
+                  value={form.sale_price}
+                  onChange={(e) => setForm({ ...form, sale_price: e.target.value })}
+                />
+              </label>
+              <label className="field">
+                <span>Kết thúc sale</span>
+                <input
+                  type="datetime-local"
+                  value={form.sale_end_at}
+                  onChange={(e) => setForm({ ...form, sale_end_at: e.target.value })}
+                />
+              </label>
+            </div>
+            {form.sale_price && form.price && Number(form.sale_price) > 0 && Number(form.sale_price) < Number(form.price) && (
+              <p className="field-hint">
+                Giảm: <strong>{Math.round((1 - Number(form.sale_price) / Number(form.price)) * 100)}%</strong>
+                {' · '}Hiển thị badge: <strong>SALE {Math.round((Number(form.sale_price) * 100) / Number(form.price))}%</strong>
+              </p>
+            )}
+          </fieldset>
           <label className="field">
             <span>Danh mục *</span>
             <select
@@ -272,6 +367,14 @@ export default function AdminProductsPage() {
             onChange={(v) => setForm({ ...form, image_url: v })}
             disabled={submitting}
           />
+          <TagInput
+            label="Màu sắc"
+            value={form.colors}
+            onChange={(next) => setForm({ ...form, colors: next })}
+            placeholder="Nhập màu rồi nhấn Enter (vd: Hồng, Đen)"
+            hint="Khách hàng sẽ chọn 1 màu khi liên hệ qua Zalo. Để trống nếu sản phẩm không có biến thể màu."
+            suggestions={COLOR_SUGGESTIONS}
+          />
           <label className="field">
             <span>Mô tả</span>
             <textarea
@@ -280,14 +383,21 @@ export default function AdminProductsPage() {
               onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
           </label>
-          <label className="field-inline">
-            <input
-              type="checkbox"
+          <div className="field-inline switch-row">
+            <Switch
               checked={form.is_active}
-              onChange={(e) => setForm({ ...form, is_active: e.target.checked })}
+              onChange={(next) => setForm({ ...form, is_active: next })}
+              ariaLabel="Trạng thái còn hàng"
             />
-            <span>Hiển thị trên website</span>
-          </label>
+            <div className="switch-label">
+              <strong>{form.is_active ? 'Đang còn hàng' : 'Hết hàng'}</strong>
+              <small>
+                {form.is_active
+                  ? 'Khách có thể đặt mua qua Zalo.'
+                  : 'Sản phẩm vẫn hiển thị nhưng có nhãn "Hết hàng" và ẩn nút mua.'}
+              </small>
+            </div>
+          </div>
           {error && <div className="form-error">{error}</div>}
         </form>
       </Modal>
