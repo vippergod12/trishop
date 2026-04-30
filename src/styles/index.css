@@ -1175,41 +1175,244 @@ img { display: block; max-width: 100%; }
 
 /* ---------- Footer ---------- */
 .footer {
-  background: var(--bg-dark);
-  color: rgba(255,255,255,0.6);
-  border-top: 1px solid #1a1a1a;
-  padding: 40px 0;
+  background: #efe7d8;
+  color: var(--text);
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 56px 0 0;
   margin-top: auto;
+  font-size: 14px;
 }
 
 .footer-inner {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr 1.1fr 1.2fr 1.3fr;
+  gap: 40px;
+  align-items: flex-start;
 }
 
-.footer-brand {
+.footer-col h4 {
+  font-family: var(--font-serif);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  margin: 0 0 16px;
+  color: var(--text);
+}
+
+.footer-col ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.footer-col ul li a {
+  color: rgba(28, 25, 23, 0.7);
+  text-decoration: none;
+  transition: color .2s ease;
+}
+
+.footer-col ul li a:hover {
+  color: var(--accent);
+}
+
+.footer-brand-col .footer-logo {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.footer-logo .brand-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--text);
   color: #fff;
+  border-radius: 50%;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.footer-logo-text {
+  letter-spacing: 1.5px;
 }
 
 .footer-tag {
-  margin: 4px 0 0;
+  margin: 0 0 18px;
   font-size: 13px;
+  color: rgba(28, 25, 23, 0.65);
+  line-height: 1.6;
 }
 
-.footer-meta {
+.footer-contact {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(28, 25, 23, 0.75);
+}
+
+.footer-contact li {
+  line-height: 1.55;
+}
+
+.footer-contact-label {
+  font-weight: 600;
+  color: var(--text);
+  margin-right: 6px;
+}
+
+.footer-contact a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.footer-contact a:hover {
+  color: var(--accent);
+}
+
+.footer-socials {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.footer-socials a {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--text);
+  color: #efe7d8;
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
-  font-size: 12px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+  justify-content: center;
+  transition: transform .2s ease, background .2s ease;
+}
+
+.footer-socials a:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+.footer-subscribe-heading {
+  margin-top: 4px !important;
+}
+
+.footer-subscribe {
+  display: flex;
+  align-items: stretch;
+  background: #fff;
+  border-radius: 999px;
+  padding: 4px 4px 4px 16px;
+  border: 1px solid rgba(0,0,0,0.05);
+  max-width: 320px;
+}
+
+.footer-subscribe input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--text);
+  min-width: 0;
+}
+
+.footer-subscribe input::placeholder {
+  color: rgba(28, 25, 23, 0.4);
+}
+
+.footer-subscribe button {
+  border: none;
+  background: var(--text);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .2s ease;
+}
+
+.footer-subscribe button:hover {
+  background: var(--accent);
+}
+
+.footer-bottom {
+  margin-top: 48px;
+  padding: 18px 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #e8dec9;
+  text-align: center;
+  font-size: 13px;
+  color: rgba(28, 25, 23, 0.7);
+}
+
+.footer-bottom p {
+  margin: 2px 0;
+}
+
+/* ---------- Floating Actions ---------- */
+.floating-actions {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 80;
+}
+
+.floating-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+  background: var(--text);
+  color: #fff;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: transform .2s ease, background .2s ease, opacity .25s ease, visibility .25s ease;
+}
+
+.floating-btn:hover {
+  background: var(--accent);
+  transform: translateY(-2px);
+}
+
+.floating-chat {
+  background: var(--accent);
+}
+
+.floating-chat:hover {
+  background: var(--text);
+}
+
+.floating-top {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+}
+
+.floating-top.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
 }
 
 /* ---------- Login ---------- */
@@ -1697,6 +1900,15 @@ img { display: block; max-width: 100%; }
   .strip-cell { width: 280px; }
 
   .admin-main { padding: 28px; }
+
+  /* Footer collapse to 3 columns on tablet */
+  .footer-inner {
+    grid-template-columns: 1.4fr 1fr 1.2fr;
+    gap: 32px;
+  }
+  .footer-connect-col { grid-column: 1 / -1; }
+  .footer-socials { margin-bottom: 14px; }
+  .footer-subscribe { max-width: 360px; }
 }
 
 /* ----- TABLET PORTRAIT (≤ 768px) ----- */
@@ -1764,9 +1976,21 @@ img { display: block; max-width: 100%; }
   .product-detail-price { font-size: 22px; }
 
   /* Footer */
-  .footer { padding: 28px 0; }
-  .footer-inner { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .footer-meta { flex-wrap: wrap; }
+  .footer { padding: 40px 0 0; }
+  .footer-inner {
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  .footer-brand-col,
+  .footer-connect-col {
+    grid-column: 1 / -1;
+  }
+  .footer-subscribe { max-width: 100%; }
+  .footer-bottom { margin-top: 32px; padding: 16px 0; font-size: 12px; }
+
+  /* Floating actions */
+  .floating-actions { right: 14px; bottom: 14px; gap: 8px; }
+  .floating-btn { width: 42px; height: 42px; }
 
   /* Admin */
   .admin-shell { grid-template-columns: 1fr; }
