@@ -31,8 +31,14 @@ export default function TrendingGrid({ products, loading }: Props) {
       <div className="container">
         <Reveal variant="fade-up">
           <div className="trending-heading">
-            <span className="section-eyebrow">Vừa cập kệ</span>
-            <h2>Sản phẩm mới</h2>
+            <div className="trending-heading-text">
+              <span className="section-eyebrow">Vừa cập kệ</span>
+              <h2>Sản phẩm mới</h2>
+            </div>
+            <Link to="/cua-hang" className="trending-link">
+              Xem toàn bộ sản phẩm
+              <span aria-hidden>→</span>
+            </Link>
           </div>
         </Reveal>
 

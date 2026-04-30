@@ -3,6 +3,7 @@ import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
 import CategoryPage from './pages/CategoryPage';
 import ProductDetailPage from './pages/ProductDetailPage';
+import AllProductsPage from './pages/AllProductsPage';
 import LoginPage from './pages/admin/LoginPage';
 import AdminLayout from './pages/admin/AdminLayout';
 import AdminCategoriesPage from './pages/admin/AdminCategoriesPage';
@@ -22,6 +23,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="/cua-hang" element={<AllProductsPage />} />
         <Route path="/danh-muc/:slug" element={<CategoryPage />} />
         <Route path="/san-pham/:slug" element={<ProductDetailPage />} />
       </Route>
