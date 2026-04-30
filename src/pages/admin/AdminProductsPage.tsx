@@ -5,6 +5,7 @@ import Modal from '../../components/Modal';
 import ImagePicker from '../../components/ImagePicker';
 import TagInput from '../../components/TagInput';
 import Switch from '../../components/Switch';
+import Pagination from '../../components/Pagination';
 import { formatVnd } from '../../utils/format';
 import { fromDatetimeLocalValue, getSaleInfo, toDatetimeLocalValue } from '../../utils/sale';
 
@@ -37,6 +38,8 @@ const emptyForm: FormState = {
 
 const COLOR_SUGGESTIONS = ['Đen', 'Trắng', 'Xám', 'Be', 'Hồng', 'Đỏ', 'Xanh navy', 'Xanh dương', 'Nâu', 'Vàng'];
 
+const PAGE_SIZE = 10;
+
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -47,6 +50,7 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
 
   async function refresh() {
     setLoading(true);
@@ -68,6 +72,21 @@ export default function AdminProductsPage() {
   }, [filterCategory]);
 
   const categoryMap = useMemo(() => new Map(categories.map((c) => [c.id, c])), [categories]);
+
+  const totalPages = Math.max(1, Math.ceil(products.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const paginatedProducts = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return products.slice(start, start + PAGE_SIZE);
+  }, [products, safePage]);
+
+  useEffect(() => {
+    if (page !== safePage) setPage(safePage);
+  }, [page, safePage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterCategory]);
 
   function openCreate() {
     setForm({ ...emptyForm, category_id: categories[0]?.id ? String(categories[0].id) : '' });
@@ -150,6 +169,7 @@ export default function AdminProductsPage() {
 
   function onSearchSubmit(e: FormEvent) {
     e.preventDefault();
+    setPage(1);
     refresh();
   }
 
@@ -200,18 +220,18 @@ export default function AdminProductsPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: 64 }}>#</th>
-                <th>Ảnh</th>
-                <th>Tên</th>
-                <th>Danh mục</th>
-                <th>Giá</th>
-                <th>Màu sắc</th>
-                <th>Còn hàng</th>
-                <th style={{ width: 160 }}></th>
+                <th style={{ width: '5%' }}>#</th>
+                <th style={{ width: '9%' }}>Ảnh</th>
+                <th style={{ width: '22%' }}>Tên</th>
+                <th style={{ width: '14%' }}>Danh mục</th>
+                <th style={{ width: '13%' }}>Giá</th>
+                <th style={{ width: '14%' }}>Màu sắc</th>
+                <th style={{ width: '8%' }}>Còn hàng</th>
+                <th style={{ width: '15%' }}></th>
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
+              {paginatedProducts.map((p) => (
                 <tr key={p.id}>
                   <td>{p.id}</td>
                   <td>
@@ -260,20 +280,29 @@ export default function AdminProductsPage() {
                         onChange={() => toggleActive(p)}
                         ariaLabel={p.is_active ? 'Tắt còn hàng' : 'Bật còn hàng'}
                       />
-                      <span className={`status-text ${p.is_active ? 'on' : 'off'}`}>
-                        {p.is_active ? 'Còn hàng' : 'Hết hàng'}
-                      </span>
                     </div>
                   </td>
-                  <td className="actions">
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(p)}>Sửa</button>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(p)}>Xoá</button>
+                  <td>
+                    <div className="actions">
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(p)}>Sửa</button>
+                      <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(p)}>Xoá</button>
+                    </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {!loading && products.length > 0 && totalPages > 1 && (
+        <Pagination
+          page={safePage}
+          totalPages={totalPages}
+          totalItems={products.length}
+          pageSize={PAGE_SIZE}
+          onChange={setPage}
+        />
       )}
 
       <Modal

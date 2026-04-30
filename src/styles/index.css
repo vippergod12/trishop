@@ -2905,6 +2905,7 @@ img { display: block; max-width: 100%; }
   grid-template-columns: 260px 1fr;
   min-height: 100vh;
   background: var(--bg);
+  position: relative;
 }
 
 .admin-sidebar {
@@ -2913,6 +2914,56 @@ img { display: block; max-width: 100%; }
   display: flex;
   flex-direction: column;
   padding: 28px 24px;
+  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Mũi tên đóng/mở dính ở cạnh phải sidebar — chỉ hiện khi <1296px.
+   Dùng position: fixed + left transition để vẫn nằm cạnh sidebar khi nó trượt.
+   Đặt giữa màn hình theo chiều dọc để không che heading. */
+.admin-sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 26px;
+  height: 56px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: var(--bg-dark);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.18);
+  z-index: 56;
+  transform: translateY(-50%);
+  transition: left 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.admin-sidebar-toggle:hover {
+  background: #1a1a1a;
+}
+.admin-sidebar-toggle svg {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.admin-shell.sidebar-open .admin-sidebar-toggle svg {
+  transform: rotate(180deg);
+}
+
+/* Backdrop mờ khi sidebar mở (mobile) */
+.admin-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 50;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .admin-brand {
@@ -3008,17 +3059,48 @@ img { display: block; max-width: 100%; }
   min-width: 240px;
 }
 
-@media (max-width: 900px) {
-  .admin-shell { grid-template-columns: 1fr; }
-  .admin-sidebar {
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 16px;
+/* <1296px: sidebar trượt overlay từ trái với mũi tên dính ở cạnh */
+@media (max-width: 1295px) {
+  .admin-shell {
+    grid-template-columns: 1fr;
   }
-  .admin-brand { margin-bottom: 0; }
-  .admin-nav { flex-direction: row; margin-left: auto; }
-  .admin-user { display: none; }
-  .admin-main { padding: 20px; }
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(280px, 78vw);
+    z-index: 55;
+    transform: translateX(-100%);
+    box-shadow: 0 0 24px rgba(0, 0, 0, 0.18);
+    overflow-y: auto;
+  }
+  .admin-shell.sidebar-open .admin-sidebar {
+    transform: translateX(0);
+  }
+  .admin-sidebar-toggle {
+    display: inline-flex;
+  }
+  /* Khi mở: mũi tên dịch sang phải đúng bằng width sidebar */
+  .admin-shell.sidebar-open .admin-sidebar-toggle {
+    left: min(280px, 78vw);
+  }
+  .admin-backdrop {
+    display: block;
+  }
+  .admin-shell.sidebar-open .admin-backdrop {
+    opacity: 1;
+    visibility: visible;
+  }
+  .admin-main {
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .admin-main {
+    padding: 24px 16px;
+  }
 }
 
 /* ---------- Tables ---------- */
@@ -3026,13 +3108,20 @@ img { display: block; max-width: 100%; }
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  table-layout: fixed;
+  min-width: 920px;
+}
+.data-table td {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 .data-table thead { background: var(--bg-cream); }
 .data-table th,
@@ -3071,6 +3160,83 @@ img { display: block; max-width: 100%; }
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+}
+
+/* ---------- Pagination ---------- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.pagination-info {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.pagination-info strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.pagination-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.pagination-btn:hover:not(:disabled):not(.is-active) {
+  background: var(--bg-cream);
+  border-color: var(--text-muted);
+}
+.pagination-btn.is-active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  cursor: default;
+}
+.pagination-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pagination-gap {
+  min-width: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+  user-select: none;
+}
+
+@media (max-width: 600px) {
+  .pagination {
+    justify-content: center;
+    padding: 12px;
+  }
+  .pagination-info {
+    width: 100%;
+    text-align: center;
+  }
+  .pagination-btn { min-width: 32px; height: 32px; font-size: 12px; padding: 0 8px; }
 }
 
 /* ---------- Modal ---------- */
@@ -3158,8 +3324,6 @@ img { display: block; max-width: 100%; }
   .trending-heading h2 { font-size: clamp(32px, 5vw, 48px); }
   .cta-grid h2 { font-size: clamp(48px, 11vw, 96px); }
 
-  .admin-main { padding: 28px; }
-
   /* Footer: 3 cột vẫn nằm 1 hàng, gap nhỏ lại */
   .footer-inner {
     grid-template-columns: 1.5fr 1fr 1.3fr;
@@ -3242,24 +3406,7 @@ img { display: block; max-width: 100%; }
   .floating-actions { right: 14px; bottom: 14px; gap: 8px; }
   .floating-btn { width: 42px; height: 42px; }
 
-  /* Admin */
-  .admin-shell { grid-template-columns: 1fr; }
-  .admin-sidebar {
-    flex-direction: row;
-    align-items: center;
-    padding: 12px 16px;
-    overflow-x: auto;
-  }
-  .admin-brand { margin-bottom: 0; flex-shrink: 0; }
-  .admin-nav {
-    flex-direction: row;
-    margin-left: auto;
-    gap: 4px;
-    flex-wrap: nowrap;
-  }
-  .admin-nav a { padding: 8px 10px; font-size: 13px; white-space: nowrap; }
-  .admin-user { display: none; }
-  .admin-main { padding: 20px 16px; }
+  /* Admin (sidebar overlay đã xử lý ở rule <1295px, ở đây chỉ chỉnh main) */
   .admin-page-header { gap: 12px; align-items: flex-start; }
   .admin-page-header h1 { font-size: 22px; }
   .admin-page-header .btn { width: 100%; }
@@ -3270,18 +3417,19 @@ img { display: block; max-width: 100%; }
   .toolbar-search input { min-width: 0; width: 100%; }
   .select { width: 100%; }
 
-  /* Table — tablet portrait (≤768px) giữ layout ngang, chỉ nén padding/font */
-  .data-table { font-size: 13px; }
+  /* Table — tablet portrait (≤768px) giữ layout ngang + scroll ngang nếu cần */
+  .data-table {
+    font-size: 13px;
+    min-width: 720px; /* nhỏ lại so với desktop để giảm scroll ngang */
+  }
   .data-table th,
   .data-table td { padding: 12px 10px; }
-  .data-table th:first-child,
-  .data-table td:first-child { display: none; } /* giấu cột # cho gọn */
   .data-table .table-thumb { width: 48px; height: 48px; }
   .data-table .cell-strong { font-size: 13px; }
   .data-table .cell-muted { font-size: 11px; }
-  .data-table .actions { gap: 4px; flex-wrap: wrap; }
+  .data-table .actions { gap: 4px; flex-wrap: nowrap; }
   .data-table .actions .btn-sm { padding: 6px 10px; font-size: 11px; }
-  .table-wrapper { overflow-x: auto; }
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
   /* Form on mobile */
   .form-row { grid-template-columns: 1fr; }
@@ -3308,10 +3456,43 @@ img { display: block; max-width: 100%; }
   .navbar-links { top: 60px; }
 }
 
-/* ----- PHONE (≤ 480px) ----- */
-/* ----- LARGE PHONE (≤ 600px) — Admin table -> card ----- */
-@media (max-width: 600px) {
-  /* Admin table → card list */
+/* ----- SMALL PHONE (≤ 480px) — Admin table giữ horizontal scroll ----- */
+@media (max-width: 480px) {
+  .data-table {
+    font-size: 12px;
+    min-width: 600px;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 10px 6px;
+    vertical-align: middle;
+  }
+  .data-table .table-thumb { width: 40px; height: 40px; }
+  .data-table .cell-strong {
+    font-size: 12px;
+    line-height: 1.3;
+  }
+  .data-table .cell-muted {
+    /* Ẩn mô tả trên màn hình nhỏ để hàng không bị quá cao */
+    display: none;
+  }
+  .data-table code { font-size: 10px; }
+  .data-table .actions {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 4px;
+    align-items: center;
+    justify-content: flex-end;
+  }
+  .data-table .actions .btn-sm {
+    padding: 6px 10px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+}
+
+/* ----- TINY PHONE (≤ 380px) — Admin table -> card list ----- */
+@media (max-width: 380px) {
   .table-wrapper { border: none; background: transparent; overflow: visible; }
   .data-table { display: block; }
   .data-table thead { display: none; }
@@ -3337,7 +3518,15 @@ img { display: block; max-width: 100%; }
     align-self: start;
   }
   .data-table .table-thumb { width: 64px; height: 64px; }
-  .actions { grid-column: 2; justify-content: flex-start; flex-wrap: wrap; }
+  /* td chứa actions thì kéo full row để button không bó hẹp */
+  .data-table tbody tr td:has(.actions) {
+    grid-column: 2;
+  }
+  .data-table .actions {
+    flex-direction: row;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 480px) {

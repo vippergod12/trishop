@@ -108,12 +108,12 @@ export default function AdminCategoriesPage() {
           <table className="data-table">
             <thead>
               <tr>
-                <th style={{ width: 64 }}>#</th>
-                <th>Ảnh</th>
-                <th>Tên</th>
-                <th>Slug</th>
-                <th>Sản phẩm</th>
-                <th style={{ width: 160 }}></th>
+                <th style={{ width: '6%' }}>#</th>
+                <th style={{ width: '12%' }}>Ảnh</th>
+                <th style={{ width: '32%' }}>Tên</th>
+                <th style={{ width: '18%' }}>Slug</th>
+                <th style={{ width: '12%' }}>Sản phẩm</th>
+                <th style={{ width: '20%' }}></th>
               </tr>
             </thead>
             <tbody>
@@ -133,9 +133,11 @@ export default function AdminCategoriesPage() {
                   </td>
                   <td><code>{c.slug}</code></td>
                   <td>{c.product_count ?? 0}</td>
-                  <td className="actions">
-                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(c)}>Sửa</button>
-                    <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(c)}>Xoá</button>
+                  <td>
+                    <div className="actions">
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => openEdit(c)}>Sửa</button>
+                      <button type="button" className="btn btn-danger btn-sm" onClick={() => onDelete(c)}>Xoá</button>
+                    </div>
                   </td>
                 </tr>
               ))}
