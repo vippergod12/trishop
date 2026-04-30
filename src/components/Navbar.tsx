@@ -146,7 +146,7 @@ export default function Navbar() {
           type="button"
           aria-label="Toggle menu"
           aria-expanded={open}
-          className="navbar-toggle"
+          className={`navbar-toggle ${open ? 'open' : ''}`}
           onClick={() => setOpen((v) => !v)}
         >
           <span />
