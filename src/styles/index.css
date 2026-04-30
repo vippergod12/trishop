@@ -1876,6 +1876,64 @@ img { display: block; max-width: 100%; }
   .product-detail-media { max-width: 360px; }
 }
 
+/* ---------- Mobile sticky CTA bar (chỉ trên trang chi tiết SP) ---------- */
+.mobile-cta-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-cta-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 90;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+    background: #fff;
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.08);
+  }
+  .mobile-cta-bar-price {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    line-height: 1.1;
+    font-family: var(--font-numeric);
+    font-feature-settings: 'tnum', 'lnum';
+    min-width: 0;
+  }
+  .mobile-cta-bar-sale {
+    color: #dc2626;
+    font-weight: 700;
+    font-size: 17px;
+    letter-spacing: 0.2px;
+  }
+  .mobile-cta-bar-strike {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .mobile-cta-bar-btn {
+    flex: 0 0 auto;
+    padding: 11px 18px;
+    font-size: 14px;
+    box-shadow: 0 4px 14px rgba(0, 104, 255, 0.32);
+  }
+
+  /* Khi có sticky bar: đẩy nội dung không bị che, đẩy floating-actions lên trên bar */
+  body:has(.mobile-cta-bar) {
+    padding-bottom: 76px;
+  }
+  body:has(.mobile-cta-bar) .floating-actions {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* ---------- Product Carousel (related + hot trên trang chi tiết) ---------- */
 .product-carousel-section {
   background: var(--bg);
@@ -2665,6 +2723,16 @@ img { display: block; max-width: 100%; }
 
 .floating-chat:hover {
   background: var(--text);
+}
+
+.floating-zalo {
+  background: #0068ff;
+  color: #fff;
+  text-decoration: none;
+}
+
+.floating-zalo:hover {
+  background: #0050cc;
 }
 
 .floating-top {

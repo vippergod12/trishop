@@ -179,22 +179,6 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <div className="product-detail-meta">
-              <div>
-                <span className="meta-label">Danh mục</span>
-                <span>{product.category_name}</span>
-              </div>
-              <div>
-                <span className="meta-label">Tình trạng</span>
-                <span className={product.is_active ? 'status-on' : 'status-off'}>
-                  {product.is_active ? 'Còn hàng' : 'Hết hàng'}
-                </span>
-              </div>
-              <div>
-                <span className="meta-label">Mã sản phẩm</span>
-                <span>#{product.id}</span>
-              </div>
-            </div>
             {product.is_active && ZALO_ENABLED ? (
               <div className="product-detail-cta">
                 <button
@@ -232,10 +216,56 @@ export default function ProductDetailPage() {
                 </span>
               </div>
             ) : null}
+
+            <div className="product-detail-meta">
+              <div>
+                <span className="meta-label">Danh mục</span>
+                <span>{product.category_name}</span>
+              </div>
+              <div>
+                <span className="meta-label">Tình trạng</span>
+                <span className={product.is_active ? 'status-on' : 'status-off'}>
+                  {product.is_active ? 'Còn hàng' : 'Hết hàng'}
+                </span>
+              </div>
+              <div>
+                <span className="meta-label">Mã sản phẩm</span>
+                <span>#{product.id}</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
       </section>
+
+      {product.is_active && ZALO_ENABLED && (
+        <div className="mobile-cta-bar" role="region" aria-label="Liên hệ mua hàng">
+          <div className="mobile-cta-bar-price">
+            {sale.isOnSale ? (
+              <>
+                <span className="mobile-cta-bar-sale">{formatVnd(sale.effectivePrice)}</span>
+                <span className="mobile-cta-bar-strike">{formatVnd(sale.originalPrice)}</span>
+              </>
+            ) : (
+              <span className="mobile-cta-bar-sale">{formatVnd(product.price)}</span>
+            )}
+          </div>
+          <button
+            type="button"
+            className="btn-zalo mobile-cta-bar-btn"
+            onClick={() => handleZaloContact(product, sale.effectivePrice, selectedColor)}
+            aria-label="Liên hệ shop qua Zalo để mua"
+          >
+            <svg viewBox="0 0 64 64" width="20" height="20" aria-hidden>
+              <path
+                fill="currentColor"
+                d="M32 6C16.5 6 4 16.7 4 30c0 7 3.5 13.3 9.2 17.6-.5 2.5-1.7 5.7-4 8 .3.4.8.6 1.4.5 4.3-.5 8.5-2.2 11.5-3.7 3.2.9 6.5 1.4 9.9 1.4 15.5 0 28-10.7 28-24S47.5 6 32 6zm-9.6 28.7h-6.7c-.6 0-1-.4-1-1v-9.5c0-.6.4-1 1-1s1 .4 1 1v8.5h5.7c.6 0 1 .4 1 1s-.4 1-1 1zm5-1c0 .6-.4 1-1 1s-1-.4-1-1v-9.5c0-.6.4-1 1-1s1 .4 1 1v9.5zm9.4 0c0 .6-.4 1-1 1-.3 0-.6-.2-.8-.4l-5-6.6v6c0 .6-.4 1-1 1s-1-.4-1-1v-9.5c0-.6.4-1 1-1 .3 0 .6.2.8.4l5 6.6v-6c0-.6.4-1 1-1s1 .4 1 1v9.5zm10.6 0c0 .3-.2.6-.4.8-.2.2-.4.3-.6.3h-6c-.6 0-1-.4-1-1v-9.5c0-.6.4-1 1-1s1 .4 1 1v8.5h5c.6 0 1 .4 1 .9z"
+              />
+            </svg>
+            <span>Mua qua Zalo</span>
+          </button>
+        </div>
+      )}
 
       {related.length > 0 && (
         <ProductCarousel

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { ZALO_ENABLED, ZALO_URL } from '../utils/zalo';
 
 export default function FloatingActions() {
   const [showTop, setShowTop] = useState(false);
@@ -12,17 +13,23 @@ export default function FloatingActions() {
 
   return (
     <div className="floating-actions">
-      <button
-        type="button"
-        className="floating-btn floating-chat"
-        aria-label="Chat trực tuyến"
-        onClick={() => alert('Chat online sẽ được tích hợp sau.')}
-        title="Chat với chúng tôi"
-      >
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
-          <path d="M12 3a9 9 0 0 0-9 9c0 1.6.4 3.1 1.1 4.4L3 21l4.7-1.1A9 9 0 1 0 12 3zm-3 10.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm3 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm3 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" />
-        </svg>
-      </button>
+      {ZALO_ENABLED && (
+        <a
+          href={ZALO_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="floating-btn floating-zalo"
+          aria-label="Liên hệ shop qua Zalo"
+          title="Liên hệ qua Zalo"
+        >
+          <svg viewBox="0 0 64 64" width="22" height="22" aria-hidden>
+            <path
+              fill="currentColor"
+              d="M32 6C16.5 6 4 16.7 4 30c0 7 3.5 13.3 9.2 17.6-.5 2.5-1.7 5.7-4 8 .3.4.8.6 1.4.5 4.3-.5 8.5-2.2 11.5-3.7 3.2.9 6.5 1.4 9.9 1.4 15.5 0 28-10.7 28-24S47.5 6 32 6zm-9.6 28.7h-6.7c-.6 0-1-.4-1-1v-9.5c0-.6.4-1 1-1s1 .4 1 1v8.5h5.7c.6 0 1 .4 1 1s-.4 1-1 1zm5-1c0 .6-.4 1-1 1s-1-.4-1-1v-9.5c0-.6.4-1 1-1s1 .4 1 1v9.5zm9.4 0c0 .6-.4 1-1 1-.3 0-.6-.2-.8-.4l-5-6.6v6c0 .6-.4 1-1 1s-1-.4-1-1v-9.5c0-.6.4-1 1-1 .3 0 .6.2.8.4l5 6.6v-6c0-.6.4-1 1-1s1 .4 1 1v9.5zm10.6 0c0 .3-.2.6-.4.8-.2.2-.4.3-.6.3h-6c-.6 0-1-.4-1-1v-9.5c0-.6.4-1 1-1s1 .4 1 1v8.5h5c.6 0 1 .4 1 .9z"
+            />
+          </svg>
+        </a>
+      )}
 
       <button
         type="button"
