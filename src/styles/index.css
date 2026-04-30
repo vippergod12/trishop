@@ -3739,6 +3739,8 @@ img { display: block; max-width: 100%; }
   .all-products-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
+/* 860px: sidebar chuyển thành chip ngang ở trên,
+   nhưng product grid vẫn giữ 3 cột để tận dụng không gian */
 @media (max-width: 860px) {
   .all-products-layout {
     grid-template-columns: 1fr;
@@ -3764,8 +3766,13 @@ img { display: block; max-width: 100%; }
     padding: 8px 16px;
   }
   .sidebar-item.is-active { background: var(--text); color: var(--bg); border-color: var(--text); }
-  .all-products-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px 16px !important; }
+  .all-products-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 24px 18px !important; }
   .btn-load-more { padding: 12px 24px; font-size: 12px; }
+}
+
+/* 640px trở xuống: 2 cột */
+@media (max-width: 640px) {
+  .all-products-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 20px 16px !important; }
 }
 
 @media (max-width: 480px) {
