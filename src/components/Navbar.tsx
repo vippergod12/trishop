@@ -31,8 +31,8 @@ export default function Navbar() {
           className="navbar-brand"
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
         >
-          <span className="brand-mark">D</span>
-          <span>Shop</span>
+          <span className="brand-mark">TS</span>
+          <span>TriShop</span>
         </Link>
 
         <nav className={`navbar-links ${open ? 'open' : ''}`}>

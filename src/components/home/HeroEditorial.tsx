@@ -83,21 +83,6 @@ export default function HeroEditorial({ categories, products, hero }: Props) {
             Xem hàng hot ↘
           </a>
         </div>
-
-        <div className="hero-edit-bottom">
-          <div className="hero-edit-stat">
-            <span className="hero-edit-stat-num">{categories.length || '—'}</span>
-            <span className="hero-edit-stat-label">Danh mục</span>
-          </div>
-          <div className="hero-edit-stat">
-            <span className="hero-edit-stat-num">7d</span>
-            <span className="hero-edit-stat-label">Đổi trả</span>
-          </div>
-          <div className="hero-edit-stat">
-            <span className="hero-edit-stat-num">24h</span>
-            <span className="hero-edit-stat-label">Phản hồi</span>
-          </div>
-        </div>
       </div>
     </section>
   );
